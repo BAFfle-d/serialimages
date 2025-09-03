@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Frame Extractor</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
+    <!-- JSZip CDN for creating zip files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <!-- jsPDF CDN for creating PDF files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease;
+        }
+        /* Custom scrollbar for gallery */
+        #gallery::-webkit-scrollbar {
+            width: 8px;
+        }
+        #gallery::-webkit-scrollbar-track {
+            background: #e0e7ff;
+            border-radius: 10px;
+        }
+        #gallery::-webkit-scrollbar-thumb {
+            background-color: #818cf8;
+            border-radius: 10px;
+            border: 2px solid #e0e7ff;
+        }
+        .drag-over {
+            border: 2px dashed #4f46e5;
+            background-color: #eef2ff;
+        }
+
+        /* Dark mode styles */
+        body.dark {
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+        .dark .bg-white {
+            background-color: #2d3748;
+        }
+        .dark .bg-gray-100 {
+            background-color: #1a202c;
+        }
+        .dark .bg-gray-50 {
+            background-color: #2d3748;
+        }
+        .dark .bg-gray-200 {
+            background-color: #4a5568;
+        }
+        .dark .text-gray-800 {
+            color: #e2e8f0;
+        }
+        .dark .text-gray-600 {
+            color: #a0aec0;
+        }
+        .dark .text-gray-700 {
+            color: #e2e8f0;
+        }
+        .dark .text-gray-500 {
+            color: #a0aec0;
+        }
+        .dark .text-indigo-800 {
+            color: #c3dafe;
+        }
+        .dark .border-gray-300 {
+            border-color: #4a5568;
+        }
+        .dark .bg-indigo-50 {
+            background-color: #3f51b5;
+        }
+        .dark #gallery::-webkit-scrollbar-track {
+            background: #4a5568;
+        }
+        .dark #gallery::-webkit-scrollbar-thumb {
+            background-color: #667eea;
+            border: 2px solid #4a5568;
+        }
+        .dark input, .dark select {
+            background-color: #4a5568;
+            color: #e2e8f0;
+            border-color: #4a5568;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-8 text-gray-800 min-h-screen flex flex-col items-center">
+
+    <!-- Message Modal -->
+    <div id="modal-container" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm transform transition-all">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-xl font-bold"></h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <p id="modal-message" class="text-gray-600 mb-4"></p>
+            <div class="flex justify-end">
+                <button onclick="closeModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full transition-colors shadow">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Magnified Image Modal -->
+    <div id="magnify-modal-container" class="hidden fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center p-4 z-50">
+        <div class="relative max-w-full max-h-full">
+            <button onclick="closeMagnifyModal()" class="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-50">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <img id="magnified-image" src="" alt="Magnified image" class="rounded-lg shadow-2xl max-w-full max-h-screen">
+        </div>
+    </div>
+    
+    <!-- Audio Progress Modal -->
+    <div id="audio-progress-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4">Extracting Audio...</h3>
+            <p class="text-gray-600 mb-4">This may take a few moments. Please do not close the browser.</p>
+        </div>
+    </div>
+
+
+    <!-- Main Application Container -->
+    <div class="bg-white rounded-xl shadow-2xl p-6 sm:p-8 w-full max-w-5xl flex flex-col lg:flex-row gap-6">
+
+        <!-- Left Panel: Video and Controls -->
+        <div class="lg:w-1/2 flex flex-col gap-6">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-indigo-800">Video Frame Extractor</h1>
+            <p class="text-gray-600">Upload a video (max 10 min) and extract images. Supports common video formats like MP4 and MOV. This is a single-session tool; your work will not be saved after you close the page.</p>
+
+            <!-- Video Upload -->
+            <div class="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-indigo-400 transition-colors">
+                <label for="video-upload" class="cursor-pointer block text-center text-gray-500 hover:text-indigo-600 transition-colors font-medium">
+                    <span id="file-label">Click to select a video file...</span>
+                    <input type="file" id="video-upload" accept="video/*" class="hidden">
+                </label>
+            </div>
+
+            <!-- Video Player -->
+            <div class="w-full bg-gray-900 rounded-lg shadow-inner overflow-hidden relative">
+                <video id="video-player" controls class="w-full h-auto max-h-96" style="display: none;"></video>
+                <div id="video-placeholder" class="bg-gray-200 text-gray-500 flex items-center justify-center p-8 h-96">
+                    <p class="text-center">Video player will appear here.</p>
+                </div>
+                <button id="fullscreen-btn" class="hidden absolute top-4 right-4 p-2 bg-gray-800 bg-opacity-50 hover:bg-opacity-75 text-white rounded-full transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"></path></svg>
+                </button>
+            </div>
+
+            <!-- Video Controls -->
+            <div id="video-controls" class="space-y-4" style="display: none;">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold">Start:</span>
+                    <input type="number" id="start-time" value="0" class="w-24 px-2 py-1 border rounded-lg text-sm text-center bg-gray-50">
+                    <span class="font-bold">End:</span>
+                    <input type="number" id="end-time" class="w-24 px-2 py-1 border rounded-lg text-sm text-center bg-gray-50">
+                </div>
+                <input type="range" id="time-slider" min="0" max="100" value="0" class="w-full h-2 bg-indigo-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                <div class="text-sm text-gray-500 flex justify-between">
+                    <span>Current Time: <span id="current-time-display">00:00</span></span>
+                    <span>Duration: <span id="duration-display">00:00</span></span>
+                </div>
+            </div>
+
+            <!-- Extraction Mode Controls -->
+            <div id="extraction-controls" class="space-y-4" style="display: none;">
+                <div class="flex items-center justify-between bg-indigo-50 p-4 rounded-lg shadow">
+                    <span class="font-bold text-indigo-800">Extraction Mode:</span>
+                    <div class="flex gap-2">
+                        <button id="serial-btn" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-full shadow-lg hover:bg-indigo-700 transition-colors">Serial</button>
+                        <button id="manual-btn" class="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-full shadow-lg hover:bg-gray-300 transition-colors">Manual</button>
+                    </div>
+                </div>
+
+                <!-- Serial Mode Options -->
+                <div id="serial-options" class="p-4 bg-gray-50 rounded-lg border-2 border-indigo-200">
+                    <div class="flex items-center gap-4 mb-4">
+                        <label for="interval-type" class="font-bold">Interval:</label>
+                        <select id="interval-type" class="p-2 border rounded-lg bg-white shadow-sm flex-1">
+                            <option value="seconds">Seconds</option>
+                            <option value="frames">Frames</option>
+                        </select>
+                        <select id="custom-interval" class="p-2 border rounded-lg bg-white shadow-sm flex-1"></select>
+                    </div>
+                    <p id="interval-info" class="text-sm text-gray-600 mb-4"></p>
+                    <button id="extract-all-btn" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-full transition-colors shadow-lg">
+                        Start Serial Extraction
+                    </button>
+                </div>
+
+                <!-- Manual Mode Options -->
+                <div id="manual-options" class="p-4 bg-gray-50 rounded-lg border-2 border-gray-300 hidden">
+                    <button id="extract-one-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-full transition-colors shadow-lg">
+                        Capture Current Frame
+                    </button>
+                </div>
+            </div>
+            
+            <canvas id="hidden-canvas" style="display: none;"></canvas>
+        </div>
+
+        <!-- Right Panel: Image Gallery and Export -->
+        <div class="lg:w-1/2 flex flex-col gap-6">
+            <!-- Settings Panel -->
+            <div class="relative">
+                <button id="settings-toggle" class="w-full bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-xl shadow hover:bg-gray-300 transition-colors flex justify-between items-center">
+                    <span>Settings</span>
+                    <svg class="w-5 h-5 transform rotate-0 transition-transform" id="settings-arrow" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+                <div id="settings-panel" class="hidden absolute top-full left-0 mt-2 p-6 bg-white rounded-xl shadow-2xl z-20 w-full space-y-4">
+                    <!-- UI Options -->
+                    <div>
+                        <h4 class="font-bold text-lg mb-2">UI Options</h4>
+                        <div class="flex items-center space-x-4">
+                            <label class="flex items-center cursor-pointer">
+                                <span class="mr-2">Dark Mode</span>
+                                <div class="relative">
+                                    <input type="checkbox" id="dark-mode-toggle" class="sr-only">
+                                    <div class="block bg-gray-600 w-10 h-6 rounded-full"></div>
+                                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                                </div>
+                            </label>
+                            <!-- Color theme options could go here -->
+                        </div>
+                    </div>
+                    <!-- Video Length Options -->
+                    <div>
+                        <h4 class="font-bold text-lg mb-2">Video Mode</h4>
+                        <div class="flex items-center space-x-4">
+                            <label class="flex items-center cursor-pointer">
+                                <span class="mr-2">10-Minute Mode</span>
+                                <input type="checkbox" id="ten-minute-mode" class="rounded text-indigo-600 focus:ring-indigo-500">
+                            </label>
+                        </div>
+                    </div>
+                    <!-- Export Options -->
+                    <div>
+                        <h4 class="font-bold text-lg mb-2">Export Options</h4>
+                        <div class="flex-grow">
+                            <label for="base-filename" class="font-bold text-sm">Filename:</label>
+                            <input type="text" id="base-filename" class="p-2 border rounded-lg bg-gray-50 shadow-sm w-full text-sm">
+                            <p id="full-filename" class="text-xs text-gray-500 mt-1 truncate">Filename will appear here...</p>
+                        </div>
+                        <div class="flex flex-wrap gap-4 mt-4">
+                            <div class="flex items-center">
+                                <label for="output-format" class="font-bold mr-2 text-sm">Image Format:</label>
+                                <select id="output-format" class="p-2 border rounded-lg bg-gray-50 shadow-sm">
+                                    <option value="image/jpeg">JPEG</option>
+                                    <option value="image/png">PNG</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center">
+                                <label for="pdf-images-per-page" class="font-bold mr-2 text-sm">PDF Images/Page:</label>
+                                <select id="pdf-images-per-page" class="p-2 border rounded-lg bg-gray-50 shadow-sm">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="6">6</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center">
+                                <label for="timezone-offset" class="font-bold mr-2 text-sm">Timezone:</label>
+                                <select id="timezone-offset" class="p-2 border rounded-lg bg-gray-50 shadow-sm">
+                                    <option value="0">UTC</option>
+                                    <option value="-12">UTC -12:00</option>
+                                    <option value="-11">UTC -11:00</option>
+                                    <option value="-10">UTC -10:00</option>
+                                    <option value="-9">UTC -09:00</option>
+                                    <option value="-8">UTC -08:00 (PST)</option>
+                                    <option value="-7">UTC -07:00 (MST)</option>
+                                    <option value="-6">UTC -06:00 (CST)</option>
+                                    <option value="-5">UTC -05:00 (EST)</option>
+                                    <option value="-4">UTC -04:00</option>
+                                    <option value="-3">UTC -03:00</option>
+                                    <option value="-2">UTC -02:00</option>
+                                    <option value="-1">UTC -01:00</option>
+                                    <option value="1">UTC +01:00</option>
+                                    <option value="2">UTC +02:00</option>
+                                    <option value="3">UTC +03:00</option>
+                                    <option value="4">UTC +04:00</option>
+                                    <option value="5">UTC +05:00</option>
+                                    <option value="6">UTC +06:00</option>
+                                    <option value="7">UTC +07:00</option>
+                                    <option value="8">UTC +08:00</option>
+                                    <option value="9">UTC +09:00</option>
+                                    <option value="10">UTC +10:00</option>
+                                    <option value="11">UTC +11:00</option>
+                                    <option value="12">UTC +12:00</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-bold text-indigo-800">Generated Images</h2>
+            <div class="flex items-center justify-between">
+                <span class="text-gray-600 font-medium">Drag & Drop to reorder</span>
+                <div class="flex gap-2">
+                    <button id="reverse-order-btn" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-1 px-3 rounded-full transition-colors shadow-lg">
+                        Reverse Order
+                    </button>
+                    <button id="clear-gallery-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-1 px-3 rounded-full transition-colors shadow-lg">
+                        Clear Gallery
+                    </button>
+                    <button id="clear-all-btn" class="bg-gray-500 hover:bg-gray-600 text-white text-sm font-bold py-1 px-3 rounded-full transition-colors shadow-lg">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Image Gallery -->
+            <div id="gallery" class="bg-gray-50 p-4 rounded-lg border border-gray-300 h-96 overflow-y-auto">
+                <p id="gallery-placeholder" class="text-center text-gray-400 italic">Extracted images will appear here.</p>
+            </div>
+
+            <!-- Export Controls -->
+            <div id="export-controls" class="space-y-4" style="display: none;">
+                <h3 class="text-xl font-bold text-indigo-800">Export Options</h3>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button id="export-zip-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-full transition-colors shadow-lg">
+                        Export as ZIP
+                    </button>
+                    <button id="export-pdf-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-full transition-colors shadow-lg">
+                        Export as PDF
+                    </button>
+                    <button id="export-audio-btn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-full transition-colors shadow-lg">
+                        Export Audio
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const videoUpload = document.getElementById('video-upload');
+        const videoPlayer = document.getElementById('video-player');
+        const videoPlaceholder = document.getElementById('video-placeholder');
+        const videoControls = document.getElementById('video-controls');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const extractionControls = document.getElementById('extraction-controls');
+        const exportControls = document.getElementById('export-controls');
+        const fileLabel = document.getElementById('file-label');
+
+        const startTimeInput = document.getElementById('start-time');
+        const endTimeInput = document.getElementById('end-time');
+        const timeSlider = document.getElementById('time-slider');
+        const currentTimeDisplay = document.getElementById('current-time-display');
+        const durationDisplay = document.getElementById('duration-display');
+
+        const serialBtn = document.getElementById('serial-btn');
+        const manualBtn = document.getElementById('manual-btn');
+        const serialOptions = document.getElementById('serial-options');
+        const manualOptions = document.getElementById('manual-options');
+        const intervalTypeSelect = document.getElementById('interval-type');
+        const customIntervalSelect = document.getElementById('custom-interval');
+        const intervalInfo = document.getElementById('interval-info');
+        const extractAllBtn = document.getElementById('extract-all-btn');
+        const extractOneBtn = document.getElementById('extract-one-btn');
+
+        const gallery = document.getElementById('gallery');
+        const galleryPlaceholder = document.getElementById('gallery-placeholder');
+        const clearGalleryBtn = document.getElementById('clear-gallery-btn');
+        const reverseOrderBtn = document.getElementById('reverse-order-btn');
+        const clearAllBtn = document.getElementById('clear-all-btn');
+
+        const hiddenCanvas = document.getElementById('hidden-canvas');
+        const ctx = hiddenCanvas.getContext('2d');
+        
+        const exportZipBtn = document.getElementById('export-zip-btn');
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        const exportAudioBtn = document.getElementById('export-audio-btn');
+
+        const modalContainer = document.getElementById('modal-container');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const magnifyModalContainer = document.getElementById('magnify-modal-container');
+        const magnifiedImage = document.getElementById('magnified-image');
+        const audioProgressModal = document.getElementById('audio-progress-modal');
+        
+        // Settings Panel Elements
+        const settingsToggle = document.getElementById('settings-toggle');
+        const settingsPanel = document.getElementById('settings-panel');
+        const settingsArrow = document.getElementById('settings-arrow');
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const tenMinuteModeToggle = document.getElementById('ten-minute-mode');
+        const baseFilenameInput = document.getElementById('base-filename');
+        const fullFilenameDisplay = document.getElementById('full-filename');
+        const outputFormatSelect = document.getElementById('output-format');
+        const pdfImagesPerPageSelect = document.getElementById('pdf-images-per-page');
+        const timezoneOffsetSelect = document.getElementById('timezone-offset');
+
+        let images = [];
+        let videoFile = null;
+        let serialNumber = 1;
+        let isDragging = false;
+        let dragSrcEl = null;
+
+        const openModal = (title, message) => {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalContainer.classList.remove('hidden');
+        };
+        const closeModal = () => {
+            modalContainer.classList.add('hidden');
+        };
+
+        const openMagnifyModal = (imageSrc) => {
+            magnifiedImage.src = imageSrc;
+            magnifyModalContainer.classList.remove('hidden');
+        };
+        const closeMagnifyModal = () => {
+            magnifyModalContainer.classList.add('hidden');
+        };
+        
+        const formatTime = (seconds) => {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+        };
+        
+        const pad = (num, size) => ('000' + num).slice(size * -1);
+        const formatUnixTime = (unixTimestamp, offset) => {
+            const date = new Date(unixTimestamp * 1000);
+            date.setHours(date.getHours() + offset);
+            const year = date.getUTCFullYear();
+            const month = pad(date.getUTCMonth() + 1, 2);
+            const day = pad(date.getUTCDate(), 2);
+            const hours = pad(date.getUTCHours(), 2);
+            const minutes = pad(date.getUTCMinutes(), 2);
+            const seconds = pad(date.getUTCSeconds(), 2);
+            return `${year}${month}${day}_${hours}${minutes}${seconds}`;
+        };
+        
+        const getIntervalOptions = (type) => {
+            if (type === 'seconds') {
+                return [
+                    { value: 0.25, text: '0.25s' },
+                    { value: 0.5, text: '0.5s' },
+                    { value: 1, text: '1s' },
+                    { value: 2, text: '2s' },
+                    { value: 3, text: '3s' },
+                    { value: 4, text: '4s' },
+                ];
+            } else { // frames
+                return [
+                    { value: 8, text: '8 frames' },
+                    { value: 15, text: '15 frames' },
+                    { value: 30, text: '30 frames' },
+                    { value: 60, text: '60 frames' },
+                    { value: 90, text: '90 frames' },
+                    { value: 120, text: '120 frames' },
+                ];
+            }
+        };
+
+        const updateCustomIntervalOptions = () => {
+            const type = intervalTypeSelect.value;
+            const options = getIntervalOptions(type);
+            customIntervalSelect.innerHTML = options.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('');
+            
+            // Set default value based on video duration
+            if (videoFile) {
+                const duration = videoPlayer.duration;
+                let defaultInterval;
+                if (type === 'seconds') {
+                    if (duration <= 60) defaultInterval = 0.5;
+                    else if (duration <= 120) defaultInterval = 1;
+                    else if (duration <= 180) defaultInterval = 2;
+                    else if (duration <= 240) defaultInterval = 3;
+                    else defaultInterval = 4;
+                } else { // frames
+                    if (duration <= 60) defaultInterval = 15;
+                    else if (duration <= 120) defaultInterval = 30;
+                    else if (duration <= 180) defaultInterval = 60;
+                    else if (duration <= 240) defaultInterval = 90;
+                    else defaultInterval = 120;
+                }
+                customIntervalSelect.value = defaultInterval;
+            }
+            updateIntervalInfo();
+        };
+        
+        const updateIntervalInfo = () => {
+            const intervalText = customIntervalSelect.options[customIntervalSelect.selectedIndex].text;
+            intervalInfo.textContent = `Interval: Every ${intervalText}`;
+        };
+
+        const updateFullFilenameDisplay = () => {
+            if (images.length === 0) {
+                fullFilenameDisplay.textContent = 'Filename will appear here...';
+                return;
+            }
+            const baseFilename = baseFilenameInput.value || 'exported_frames';
+            const offset = parseInt(timezoneOffsetSelect.value);
+            const unixTime = formatUnixTime(images[0].timestamp, offset);
+            const ext = outputFormatSelect.value === 'image/jpeg' ? 'jpeg' : 'png';
+            fullFilenameDisplay.textContent = `Example: ${baseFilename}_Serial1_${unixTime}.${ext}`;
+        };
+
+        const extractFrame = (time) => {
+            return new Promise((resolve) => {
+                videoPlayer.currentTime = time;
+                videoPlayer.addEventListener('seeked', function onSeeked() {
+                    hiddenCanvas.width = videoPlayer.videoWidth;
+                    hiddenCanvas.height = videoPlayer.videoHeight;
+                    ctx.drawImage(videoPlayer, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+                    const mimeType = outputFormatSelect.value;
+                    const imageBase64 = hiddenCanvas.toDataURL(mimeType);
+                    resolve(imageBase64);
+                    videoPlayer.removeEventListener('seeked', onSeeked);
+                });
+            });
+        };
+
+        const renderGallery = () => {
+            gallery.innerHTML = '';
+            if (images.length === 0) {
+                galleryPlaceholder.style.display = 'block';
+                exportControls.style.display = 'none';
+                clearGalleryBtn.style.display = 'none';
+                reverseOrderBtn.style.display = 'none';
+                clearAllBtn.style.display = 'none';
+            } else {
+                galleryPlaceholder.style.display = 'none';
+                exportControls.style.display = 'block';
+                clearGalleryBtn.style.display = 'block';
+                reverseOrderBtn.style.display = 'block';
+                clearAllBtn.style.display = 'block';
+                images.forEach((img, index) => {
+                    const imgContainer = document.createElement('div');
+                    imgContainer.className = 'relative group w-full sm:w-1/2 lg:w-1/3 p-2 cursor-pointer';
+                    imgContainer.draggable = true;
+                    imgContainer.dataset.index = index;
+
+                    const imageEl = document.createElement('img');
+                    imageEl.src = img.src;
+                    imageEl.className = 'w-full h-auto rounded-lg shadow-md transition-transform transform group-hover:scale-105';
+
+                    const overlay = document.createElement('div');
+                    overlay.className = 'absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-end p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity';
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.innerHTML = `<svg class="w-5 h-5 text-red-400 hover:text-red-600 transition-colors" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.72-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd"></path></svg>`;
+                    deleteBtn.className = 'absolute top-2 right-2 p-1 rounded-full bg-white bg-opacity-75 hover:bg-opacity-100 transition-opacity';
+                    deleteBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        images.splice(index, 1);
+                        renderGallery();
+                    };
+
+                    const infoText = document.createElement('p');
+                    infoText.className = 'text-white text-xs font-medium bg-gray-900 bg-opacity-50 p-1 rounded-md';
+                    const timestamp = new Date(img.timestamp * 1000).toISOString().substr(11, 8);
+                    const order = index + 1;
+                    infoText.textContent = `Frame: ${order} | Time: ${timestamp}`;
+                    
+                    const individualExportBtn = document.createElement('button');
+                    individualExportBtn.textContent = 'Download';
+                    individualExportBtn.className = 'mt-2 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-bold py-1 px-2 rounded-full transition-colors';
+                    individualExportBtn.onclick = () => {
+                        const offset = parseInt(timezoneOffsetSelect.value);
+                        const unixTime = formatUnixTime(img.timestamp, offset);
+                        const ext = outputFormatSelect.value === 'image/jpeg' ? 'jpeg' : 'png';
+                        exportImage(img.src, `${baseFilenameInput.value}_Serial${order}_${unixTime}`, ext);
+                    };
+                    
+                    imgContainer.addEventListener('click', () => {
+                        openMagnifyModal(img.src);
+                    });
+
+                    overlay.appendChild(deleteBtn);
+                    overlay.appendChild(infoText);
+                    overlay.appendChild(individualExportBtn);
+                    imgContainer.appendChild(imageEl);
+                    imgContainer.appendChild(overlay);
+                    gallery.appendChild(imgContainer);
+                });
+            }
+            updateFullFilenameDisplay();
+        };
+
+        const handleDragStart = (e) => {
+            isDragging = true;
+            dragSrcEl = e.target.closest('[draggable="true"]');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', dragSrcEl.dataset.index);
+            dragSrcEl.classList.add('opacity-50');
+        };
+
+        const handleDragOver = (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const target = e.target.closest('[draggable="true"]');
+            if (target && target !== dragSrcEl) {
+                target.classList.add('drag-over');
+            }
+        };
+
+        const handleDragLeave = (e) => {
+            e.target.closest('[draggable="true"]')?.classList.remove('drag-over');
+        };
+
+        const handleDrop = (e) => {
+            e.stopPropagation();
+            const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+            const toIndex = parseInt(e.target.closest('[draggable="true"]').dataset.index);
+
+            if (fromIndex !== toIndex) {
+                const [draggedItem] = images.splice(fromIndex, 1);
+                images.splice(toIndex, 0, draggedItem);
+                renderGallery();
+            }
+
+            e.target.closest('[draggable="true"]').classList.remove('drag-over');
+            dragSrcEl.classList.remove('opacity-50');
+            isDragging = false;
+        };
+
+        const handleDragEnd = (e) => {
+            dragSrcEl.classList.remove('opacity-50');
+            isDragging = false;
+        };
+
+        gallery.addEventListener('dragstart', handleDragStart);
+        gallery.addEventListener('dragover', handleDragOver);
+        gallery.addEventListener('dragleave', handleDragLeave);
+        gallery.addEventListener('drop', handleDrop);
+        gallery.addEventListener('dragend', handleDragEnd);
+
+        videoUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            videoFile = file;
+            fileLabel.textContent = `Video selected: ${file.name}`;
+            baseFilenameInput.value = file.name.split('.').slice(0, -1).join('.');
+            fullscreenBtn.classList.remove('hidden');
+
+            const videoURL = URL.createObjectURL(file);
+            videoPlayer.src = videoURL;
+            videoPlayer.style.display = 'block';
+            videoPlaceholder.style.display = 'none';
+
+            videoPlayer.addEventListener('loadedmetadata', () => {
+                videoControls.style.display = 'block';
+                extractionControls.style.display = 'block';
+                const duration = videoPlayer.duration;
+                if (tenMinuteModeToggle.checked && duration > 600) {
+                    openModal('Video Too Long', 'The maximum video duration for this mode is 10 minutes. Please select a shorter video.');
+                    resetVideoState();
+                    return;
+                } else if (!tenMinuteModeToggle.checked && duration > 300) {
+                    openModal('Video Too Long', 'The maximum video duration for this mode is 5 minutes. Please select a shorter video or enable the 10-minute mode.');
+                    resetVideoState();
+                    return;
+                }
+                durationDisplay.textContent = formatTime(duration);
+                endTimeInput.value = duration;
+                startTimeInput.max = duration;
+                endTimeInput.max = duration;
+                timeSlider.max = duration;
+                updateCustomIntervalOptions();
+            });
+        });
+        
+        const resetVideoState = () => {
+            videoPlayer.pause();
+            videoPlayer.src = '';
+            videoPlaceholder.style.display = 'flex';
+            videoControls.style.display = 'none';
+            extractionControls.style.display = 'none';
+            fullscreenBtn.classList.add('hidden');
+            fileLabel.textContent = 'Click to select a video file...';
+            videoFile = null;
+        };
+        
+        const clearGallery = () => {
+            images = [];
+            serialNumber = 1;
+            renderGallery();
+        };
+
+        const resetApp = () => {
+            resetVideoState();
+            clearGallery();
+        };
+
+        videoPlayer.addEventListener('timeupdate', () => {
+            currentTimeDisplay.textContent = formatTime(videoPlayer.currentTime);
+            timeSlider.value = videoPlayer.currentTime;
+        });
+
+        timeSlider.addEventListener('input', () => {
+            videoPlayer.currentTime = timeSlider.value;
+        });
+
+        startTimeInput.addEventListener('change', () => {
+            const start = Math.max(0, parseFloat(startTimeInput.value));
+            videoPlayer.currentTime = start;
+            timeSlider.value = start;
+        });
+
+        endTimeInput.addEventListener('change', () => {
+            const end = Math.min(videoPlayer.duration, parseFloat(endTimeInput.value));
+            videoPlayer.currentTime = end;
+            timeSlider.value = end;
+        });
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (videoPlayer.requestFullscreen) {
+                videoPlayer.requestFullscreen();
+            } else if (videoPlayer.webkitRequestFullscreen) { /* Safari */
+                videoPlayer.webkitRequestFullscreen();
+            } else if (videoPlayer.msRequestFullscreen) { /* IE11 */
+                videoPlayer.msRequestFullscreen();
+            }
+        });
+
+        serialBtn.addEventListener('click', () => {
+            serialBtn.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+            serialBtn.classList.add('bg-indigo-600', 'text-white', 'hover:bg-indigo-700');
+            manualBtn.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-700');
+            manualBtn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+            manualOptions.classList.add('hidden');
+            serialOptions.classList.remove('hidden');
+        });
+
+        manualBtn.addEventListener('click', () => {
+            manualBtn.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+            manualBtn.classList.add('bg-indigo-600', 'text-white', 'hover:bg-indigo-700');
+            serialBtn.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-700');
+            serialBtn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+            manualOptions.classList.remove('hidden');
+            serialOptions.classList.add('hidden');
+        });
+        
+        intervalTypeSelect.addEventListener('change', updateCustomIntervalOptions);
+        customIntervalSelect.addEventListener('change', updateIntervalInfo);
+
+        settingsToggle.addEventListener('click', () => {
+            settingsPanel.classList.toggle('hidden');
+            settingsArrow.classList.toggle('rotate-180');
+        });
+        
+        darkModeToggle.addEventListener('change', () => {
+            document.body.classList.toggle('dark');
+        });
+
+        tenMinuteModeToggle.addEventListener('change', () => {
+            if (videoFile) {
+                const duration = videoPlayer.duration;
+                if (tenMinuteModeToggle.checked && duration > 600) {
+                    openModal('Video Too Long', 'The current video is longer than 5 minutes. Please select a shorter video or restart the page to use this mode.');
+                    tenMinuteModeToggle.checked = false;
+                } else if (!tenMinuteModeToggle.checked && duration > 300) {
+                    openModal('Video Too Long', 'The current video is longer than 5 minutes. Please select a shorter video or restart the page to use this mode.');
+                    tenMinuteModeToggle.checked = true;
+                }
+            }
+            updateCustomIntervalOptions();
+        });
+
+        extractOneBtn.addEventListener('click', async () => {
+            if (!videoFile) {
+                openModal('No Video', 'Please upload a video file first.');
+                return;
+            }
+            const imageBase64 = await extractFrame(videoPlayer.currentTime);
+            images.push({ src: imageBase64, timestamp: videoPlayer.currentTime, serial: serialNumber++ });
+            renderGallery();
+        });
+
+        extractAllBtn.addEventListener('click', async () => {
+            if (!videoFile) {
+                openModal('No Video', 'Please upload a video file first.');
+                return;
+            }
+            if (images.length > 0) {
+                const response = window.confirm('Starting a new serial extraction will clear the current images. Continue?');
+                if (!response) {
+                    return;
+                }
+            }
+            
+            images = [];
+            
+            const start = parseFloat(startTimeInput.value);
+            const end = parseFloat(endTimeInput.value);
+            
+            const intervalType = intervalTypeSelect.value;
+            const interval = parseFloat(customIntervalSelect.value);
+
+            let time = start;
+            const fps = 30; // Assuming a standard FPS
+
+            while (time <= end) {
+                const imageBase64 = await extractFrame(time);
+                images.push({ src: imageBase64, timestamp: time, serial: serialNumber++ });
+                renderGallery();
+                
+                if (intervalType === 'seconds') {
+                    time += interval;
+                } else { // frames
+                    time += interval / fps;
+                }
+                
+                if (time > end + 0.001) break;
+            }
+
+            openModal('Extraction Complete', `${images.length} images have been extracted from the selected video segment.`);
+        });
+
+        clearGalleryBtn.addEventListener('click', clearGallery);
+        clearAllBtn.addEventListener('click', resetApp);
+
+        reverseOrderBtn.addEventListener('click', () => {
+            images.reverse();
+            renderGallery();
+        });
+        
+        baseFilenameInput.addEventListener('input', updateFullFilenameDisplay);
+        outputFormatSelect.addEventListener('change', updateFullFilenameDisplay);
+        pdfImagesPerPageSelect.addEventListener('change', updateFullFilenameDisplay);
+        timezoneOffsetSelect.addEventListener('change', updateFullFilenameDisplay);
+
+        const exportImage = (dataURL, filename, ext) => {
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = `${filename}.${ext}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        exportZipBtn.addEventListener('click', async () => {
+            if (images.length === 0) {
+                openModal('No Images', 'Please extract some images first.');
+                return;
+            }
+            const zip = new JSZip();
+            const baseFilename = baseFilenameInput.value || 'exported_frames';
+            const offset = parseInt(timezoneOffsetSelect.value);
+            const ext = outputFormatSelect.value === 'image/jpeg' ? 'jpeg' : 'png';
+            const mimeType = outputFormatSelect.value;
+
+            images.forEach((img, index) => {
+                const unixTime = formatUnixTime(img.timestamp, offset);
+                const filename = `${baseFilename}_Serial${index + 1}_${unixTime}.${ext}`;
+                const imageData = img.src.split(',')[1];
+                zip.file(filename, imageData, { base64: true });
+            });
+
+            zip.generateAsync({ type: 'blob' }).then(function(content) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = `${baseFilename}_images.zip`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+        });
+        
+        exportPdfBtn.addEventListener('click', () => {
+            if (images.length === 0) {
+                openModal('No Images', 'Please extract some images first.');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const imagesPerPage = parseInt(pdfImagesPerPageSelect.value);
+            const ext = outputFormatSelect.value === 'image/jpeg' ? 'JPEG' : 'PNG';
+
+            if (images.length > 0) {
+                const tempImg = new Image();
+                tempImg.onload = () => {
+                    const originalRatio = tempImg.naturalHeight / tempImg.naturalWidth;
+                    let imgWidth, imgHeight, spacing = 10;
+                    
+                    const drawImage = (imgSrc, x, y, width, height) => {
+                        doc.addImage(imgSrc, ext, x, y, width, height);
+                    };
+
+                    let currentX = spacing;
+                    let currentY = spacing;
+                    images.forEach((img, index) => {
+                        const timestamp = new Date(img.timestamp * 1000).toISOString().substr(11, 8);
+
+                        if (index > 0 && index % imagesPerPage === 0) {
+                            doc.addPage();
+                            currentX = spacing;
+                            currentY = spacing;
+                        }
+
+                        let imgSpacing = 5;
+                        let textHeight = 5;
+                        
+                        if (imagesPerPage === 1) {
+                            imgWidth = pageWidth - 2 * spacing;
+                            imgHeight = imgWidth * originalRatio;
+                            doc.text(`Timestamp: ${timestamp}`, currentX, currentY + textHeight);
+                            drawImage(img.src, currentX, currentY + textHeight + imgSpacing, imgWidth, imgHeight);
+                            currentY += imgHeight + textHeight + 2 * imgSpacing;
+                        } else if (imagesPerPage === 2) {
+                            imgWidth = (pageWidth - 3 * spacing) / 2;
+                            imgHeight = imgWidth * originalRatio;
+                            doc.text(`Timestamp: ${timestamp}`, currentX, currentY + textHeight);
+                            drawImage(img.src, currentX, currentY + textHeight + imgSpacing, imgWidth, imgHeight);
+                            if ((index % 2) === 0) {
+                                currentX += imgWidth + spacing;
+                            } else {
+                                currentX = spacing;
+                                currentY += imgHeight + textHeight + 2 * imgSpacing;
+                            }
+                        } else if (imagesPerPage === 3) {
+                            imgWidth = (pageWidth - 4 * spacing) / 3;
+                            imgHeight = imgWidth * originalRatio;
+                            doc.text(`Timestamp: ${timestamp}`, currentX, currentY + textHeight);
+                            drawImage(img.src, currentX, currentY + textHeight + imgSpacing, imgWidth, imgHeight);
+                            if ((index % 3) < 2) {
+                                currentX += imgWidth + spacing;
+                            } else {
+                                currentX = spacing;
+                                currentY += imgHeight + textHeight + 2 * imgSpacing;
+                            }
+                        } else if (imagesPerPage === 4) {
+                            imgWidth = (pageWidth - 3 * spacing) / 2;
+                            imgHeight = (pageHeight - 4 * spacing) / 2;
+                            doc.text(`Timestamp: ${timestamp}`, currentX, currentY + textHeight);
+                            drawImage(img.src, currentX, currentY + textHeight + imgSpacing, imgWidth, imgHeight);
+                            if ((index % 2) === 0) {
+                                currentX += imgWidth + spacing;
+                            } else {
+                                currentX = spacing;
+                                currentY += imgHeight + textHeight + 2 * imgSpacing;
+                            }
+                        } else { // 6 images
+                            imgWidth = (pageWidth - 4 * spacing) / 3;
+                            imgHeight = (pageHeight - 4 * spacing) / 2;
+                            doc.text(`Timestamp: ${timestamp}`, currentX, currentY + textHeight);
+                            drawImage(img.src, currentX, currentY + textHeight + imgSpacing, imgWidth, imgHeight);
+                            if ((index % 3) < 2) {
+                                currentX += imgWidth + spacing;
+                            } else {
+                                currentX = spacing;
+                                currentY += imgHeight + textHeight + 2 * imgSpacing;
+                            }
+                        }
+                    });
+                    doc.save(`${baseFilenameInput.value}_images.pdf`);
+                };
+                tempImg.src = images[0].src;
+            }
+        });
+        
+        exportAudioBtn.addEventListener('click', () => {
+            if (!videoFile) {
+                openModal('No Video', 'Please upload a video file first.');
+                return;
+            }
+            
+            const videoElement = videoPlayer;
+            const stream = videoElement.captureStream();
+            const audioTracks = stream.getAudioTracks();
+            
+            if (audioTracks.length === 0) {
+                openModal('No Audio', 'The video file does not contain an audio track.');
+                return;
+            }
+
+            audioProgressModal.classList.remove('hidden');
+
+            const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            const audioChunks = [];
+            
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const link = document.createElement('a');
+                link.href = audioUrl;
+                link.download = `${baseFilenameInput.value}_audio.webm`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                audioProgressModal.classList.add('hidden');
+                openModal('Audio Exported', 'The audio track has been successfully downloaded.');
+            };
+
+            mediaRecorder.start();
+            setTimeout(() => {
+                mediaRecorder.stop();
+            }, videoPlayer.duration * 1000);
+        });
+
+    </script>
+</body>
+</html>
+```
