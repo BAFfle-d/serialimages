@@ -37,7 +37,7 @@
 
         /* Dark mode styles */
         body.dark {
-            background-color: #1a202c;
+            background: linear-gradient(to bottom right, #1a202c, #2d3748);
             color: #e2e8f0;
         }
         .dark .bg-white {
@@ -85,27 +85,71 @@
             color: #e2e8f0;
             border-color: #4a5568;
         }
+        .dark .from-gray-100 {
+            --tw-gradient-from: #1a202c;
+        }
+        .dark .to-indigo-50 {
+            --tw-gradient-to: #2d3748;
+        }
+        .dark .shadow-2xl {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .dark footer {
+            color: #718096;
+        }
+        /* Improved button hover states */
+        button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4);
+        }
+        /* Smooth transitions */
+        * {
+            transition-property: background-color, border-color, color;
+            transition-duration: 150ms;
+        }
+        /* Export button icons */
+        .export-btn-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+        }
     </style>
 </head>
-<body class="bg-gray-100 p-4 sm:p-8 text-gray-800 min-h-screen flex flex-col items-center">
+<body class="bg-gradient-to-br from-gray-100 to-indigo-50 p-4 sm:p-8 text-gray-800 min-h-screen flex flex-col items-center">
 
-    <!-- Future Ad Space Top -->
-    <div class="w-full max-w-5xl py-4 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-xl shadow mb-6">
-        <p class="text-gray-500 dark:text-gray-400">Future Ad Space (728x90)</p>
-    </div>
+    <!-- Header -->
+    <header class="w-full max-w-5xl mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Video Frame Extractor</h1>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Extract frames and audio from your videos</p>
+                </div>
+            </div>
+            <button id="header-dark-toggle" class="p-2 rounded-lg bg-white dark:bg-gray-800 shadow hover:shadow-md transition-shadow" title="Toggle Dark Mode">
+                <svg id="sun-icon" class="w-6 h-6 text-yellow-500 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path></svg>
+                <svg id="moon-icon" class="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+            </button>
+        </div>
+    </header>
 
     <!-- Message Modal -->
-    <div id="modal-container" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm transform transition-all">
+    <div id="modal-container" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm transform transition-all border border-gray-200 dark:border-gray-700">
             <div class="flex justify-between items-center mb-4">
-                <h3 id="modal-title" class="text-xl font-bold"></h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <h3 id="modal-title" class="text-xl font-bold text-gray-800 dark:text-white"></h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <p id="modal-message" class="text-gray-600 mb-4"></p>
+            <p id="modal-message" class="text-gray-600 dark:text-gray-300 mb-5"></p>
             <div class="flex justify-end">
-                <button onclick="closeModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full transition-colors shadow">
+                <button onclick="closeModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-2 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl">
                     OK
                 </button>
             </div>
@@ -113,95 +157,111 @@
     </div>
     
     <!-- Magnified Image Modal -->
-    <div id="magnify-modal-container" class="hidden fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center p-4 z-50">
+    <div id="magnify-modal-container" class="hidden fixed inset-0 bg-black bg-opacity-95 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="relative max-w-full max-h-full">
-            <button onclick="closeMagnifyModal()" class="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-50">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <button onclick="closeMagnifyModal()" class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors z-50 bg-white bg-opacity-10 hover:bg-opacity-20 p-2 rounded-full">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
-            <img id="magnified-image" src="" alt="Magnified image" class="rounded-lg shadow-2xl max-w-full max-h-screen">
+            <img id="magnified-image" src="" alt="Magnified image" class="rounded-xl shadow-2xl max-w-full max-h-[85vh]">
         </div>
     </div>
     
     <!-- Audio Progress Modal -->
     <div id="audio-progress-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
-            <h3 class="text-xl font-bold mb-4">Extracting Audio...</h3>
-            <p class="text-gray-600 mb-4">This may take a few moments. Please do not close the browser.</p>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4 dark:text-white">Extracting Audio...</h3>
+            <p id="audio-progress-text" class="text-gray-600 dark:text-gray-300 mb-4">Preparing audio extraction...</p>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-4">
+                <div id="audio-progress-bar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <button id="cancel-audio-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full transition-colors">
+                Cancel
+            </button>
         </div>
     </div>
 
 
     <!-- Main Application Container -->
-    <div class="bg-white rounded-xl shadow-2xl p-6 sm:p-8 w-full max-w-5xl flex flex-col lg:flex-row gap-6">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-5xl flex flex-col lg:flex-row gap-8">
 
         <!-- Left Panel: Video and Controls -->
-        <div class="lg:w-1/2 flex flex-col gap-6">
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-indigo-800">Video Frame Extractor</h1>
-            <p class="text-gray-600">Upload a video (max 10 min) and extract images. Supports common video formats like MP4 and MOV. This is a single-session tool; your work will not be saved after you close the page.</p>
+        <div class="lg:w-1/2 flex flex-col gap-5">
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                <h2 class="text-lg font-bold text-indigo-800 dark:text-indigo-300 mb-1">Upload Video</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Supports MP4, MOV and other common formats (max 10 min). Single-session tool; work is not saved after closing.</p>
+            </div>
 
             <!-- Video Upload -->
-            <div class="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-indigo-400 transition-colors">
-                <label for="video-upload" class="cursor-pointer block text-center text-gray-500 hover:text-indigo-600 transition-colors font-medium">
-                    <span id="file-label">Click to select a video file...</span>
+            <div class="bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-6 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all hover:shadow-md">
+                <label for="video-upload" class="cursor-pointer flex flex-col items-center text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                    <svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    <span id="file-label" class="font-medium text-center">Click or drag to select a video file</span>
                     <input type="file" id="video-upload" accept="video/*" class="hidden">
                 </label>
             </div>
 
             <!-- Video Player -->
-            <div class="w-full bg-gray-900 rounded-lg shadow-inner overflow-hidden relative">
-                <video id="video-player" controls class="w-full h-auto max-h-96" style="display: none;"></video>
-                <div id="video-placeholder" class="bg-gray-200 text-gray-500 flex items-center justify-center p-8 h-96">
-                    <p class="text-center">Video player will appear here.</p>
+            <div class="w-full bg-gray-900 rounded-xl shadow-lg overflow-hidden relative">
+                <video id="video-player" controls class="w-full h-auto max-h-80" style="display: none;"></video>
+                <div id="video-placeholder" class="bg-gradient-to-b from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 text-gray-500 dark:text-gray-400 flex flex-col items-center justify-center p-8 h-64">
+                    <svg class="w-16 h-16 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <p class="text-sm">Video player will appear here</p>
                 </div>
-                <button id="fullscreen-btn" class="hidden absolute top-4 right-4 p-2 bg-gray-800 bg-opacity-50 hover:bg-opacity-75 text-white rounded-full transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"></path></svg>
+                <button id="fullscreen-btn" class="hidden absolute top-3 right-3 p-2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white rounded-lg transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"></path></svg>
                 </button>
             </div>
 
             <!-- Video Controls -->
-            <div id="video-controls" class="space-y-4" style="display: none;">
-                <div class="flex items-center justify-between">
-                    <span class="font-bold">Start:</span>
-                    <input type="number" id="start-time" value="0" class="w-24 px-2 py-1 border rounded-lg text-sm text-center bg-gray-50">
-                    <span class="font-bold">End:</span>
-                    <input type="number" id="end-time" class="w-24 px-2 py-1 border rounded-lg text-sm text-center bg-gray-50">
+            <div id="video-controls" class="space-y-3 bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700" style="display: none;">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 flex-1">
+                        <span class="font-bold text-sm text-gray-600 dark:text-gray-400">Start:</span>
+                        <input type="number" id="start-time" value="0" class="w-20 px-2 py-1.5 border rounded-lg text-sm text-center bg-white dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                    <div class="flex items-center gap-2 flex-1">
+                        <span class="font-bold text-sm text-gray-600 dark:text-gray-400">End:</span>
+                        <input type="number" id="end-time" class="w-20 px-2 py-1.5 border rounded-lg text-sm text-center bg-white dark:bg-gray-700 dark:border-gray-600">
+                    </div>
                 </div>
-                <input type="range" id="time-slider" min="0" max="100" value="0" class="w-full h-2 bg-indigo-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
-                <div class="text-sm text-gray-500 flex justify-between">
-                    <span>Current Time: <span id="current-time-display">00:00</span></span>
-                    <span>Duration: <span id="duration-display">00:00</span></span>
+                <input type="range" id="time-slider" min="0" max="100" value="0" class="w-full h-2 bg-indigo-200 dark:bg-indigo-900 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                <div class="text-xs text-gray-500 dark:text-gray-400 flex justify-between">
+                    <span>Current: <span id="current-time-display" class="font-mono font-bold text-indigo-600 dark:text-indigo-400">00:00</span></span>
+                    <span>Duration: <span id="duration-display" class="font-mono font-bold">00:00</span></span>
                 </div>
             </div>
 
             <!-- Extraction Mode Controls -->
-            <div id="extraction-controls" class="space-y-4" style="display: none;">
-                <div class="flex items-center justify-between bg-indigo-50 p-4 rounded-lg shadow">
-                    <span class="font-bold text-indigo-800">Extraction Mode:</span>
-                    <div class="flex gap-2">
-                        <button id="serial-btn" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-full shadow-lg hover:bg-indigo-700 transition-colors">Serial</button>
-                        <button id="manual-btn" class="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-full shadow-lg hover:bg-gray-300 transition-colors">Manual</button>
+            <div id="extraction-controls" class="space-y-3" style="display: none;">
+                <div class="flex items-center justify-between bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 p-3 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                    <span class="font-bold text-indigo-800 dark:text-indigo-300 text-sm">Extraction Mode:</span>
+                    <div class="flex gap-1 bg-gray-200 dark:bg-gray-700 p-1 rounded-lg">
+                        <button id="serial-btn" class="bg-indigo-600 text-white font-bold py-1.5 px-4 rounded-md shadow transition-all text-sm">Serial</button>
+                        <button id="manual-btn" class="bg-transparent text-gray-700 dark:text-gray-300 font-bold py-1.5 px-4 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-all text-sm">Manual</button>
                     </div>
                 </div>
 
                 <!-- Serial Mode Options -->
-                <div id="serial-options" class="p-4 bg-gray-50 rounded-lg border-2 border-indigo-200">
-                    <div class="flex items-center gap-4 mb-4">
-                        <label for="interval-type" class="font-bold">Interval:</label>
-                        <select id="interval-type" class="p-2 border rounded-lg bg-white shadow-sm flex-1">
+                <div id="serial-options" class="p-4 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center gap-3 mb-3">
+                        <label for="interval-type" class="font-bold text-sm whitespace-nowrap">Interval:</label>
+                        <select id="interval-type" class="p-2 border rounded-lg bg-white dark:bg-gray-700 shadow-sm flex-1 text-sm">
                             <option value="seconds">Seconds</option>
                             <option value="frames">Frames</option>
                         </select>
-                        <select id="custom-interval" class="p-2 border rounded-lg bg-white shadow-sm flex-1"></select>
+                        <select id="custom-interval" class="p-2 border rounded-lg bg-white dark:bg-gray-700 shadow-sm flex-1 text-sm"></select>
                     </div>
-                    <p id="interval-info" class="text-sm text-gray-600 mb-4"></p>
-                    <button id="extract-all-btn" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-full transition-colors shadow-lg">
+                    <p id="interval-info" class="text-xs text-gray-500 dark:text-gray-400 mb-3"></p>
+                    <button id="extract-all-btn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         Start Serial Extraction
                     </button>
                 </div>
 
                 <!-- Manual Mode Options -->
-                <div id="manual-options" class="p-4 bg-gray-50 rounded-lg border-2 border-gray-300 hidden">
-                    <button id="extract-one-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-full transition-colors shadow-lg">
+                <div id="manual-options" class="p-4 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 hidden">
+                    <button id="extract-one-btn" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         Capture Current Frame
                     </button>
                 </div>
@@ -211,152 +271,182 @@
         </div>
 
         <!-- Right Panel: Image Gallery and Export -->
-        <div class="lg:w-1/2 flex flex-col gap-6">
+        <div class="lg:w-1/2 flex flex-col gap-5">
             <!-- Settings Panel -->
             <div class="relative">
-                <button id="settings-toggle" class="w-full bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-xl shadow hover:bg-gray-300 transition-colors flex justify-between items-center">
-                    <span>Settings</span>
+                <button id="settings-toggle" class="w-full bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200 font-bold py-3 px-4 rounded-xl shadow hover:shadow-md transition-all flex justify-between items-center">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Settings
+                    </span>
                     <svg class="w-5 h-5 transform rotate-0 transition-transform" id="settings-arrow" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                 </button>
-                <div id="settings-panel" class="hidden absolute top-full left-0 mt-2 p-6 bg-white rounded-xl shadow-2xl z-20 w-full space-y-4">
+                <div id="settings-panel" class="hidden absolute top-full left-0 mt-2 p-5 bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-20 w-full space-y-5 border border-gray-200 dark:border-gray-700">
                     <!-- UI Options -->
-                    <div>
-                        <h4 class="font-bold text-lg mb-2">UI Options</h4>
-                        <div class="flex items-center space-x-4">
-                            <label class="flex items-center cursor-pointer">
-                                <span class="mr-2">Dark Mode</span>
-                                <div class="relative">
-                                    <input type="checkbox" id="dark-mode-toggle" class="sr-only">
-                                    <div class="block bg-gray-600 w-10 h-6 rounded-full"></div>
-                                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
-                                </div>
-                            </label>
-                            <!-- Color theme options could go here -->
-                        </div>
+                    <div class="pb-4 border-b border-gray-200 dark:border-gray-700">
+                        <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
+                            Appearance
+                        </h4>
+                        <label class="flex items-center justify-between cursor-pointer p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <span class="text-sm">Dark Mode</span>
+                            <div class="relative">
+                                <input type="checkbox" id="dark-mode-toggle" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </div>
+                        </label>
                     </div>
                     <!-- Video Length Options -->
-                    <div>
-                        <h4 class="font-bold text-lg mb-2">Video Mode</h4>
-                        <div class="flex items-center space-x-4">
-                            <label class="flex items-center cursor-pointer">
-                                <span class="mr-2">10-Minute Mode</span>
-                                <input type="checkbox" id="ten-minute-mode" class="rounded text-indigo-600 focus:ring-indigo-500">
-                            </label>
-                        </div>
+                    <div class="pb-4 border-b border-gray-200 dark:border-gray-700">
+                        <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            Video Settings
+                        </h4>
+                        <label class="flex items-center justify-between cursor-pointer p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <span class="text-sm">Extended Mode (10 min)</span>
+                            <input type="checkbox" id="ten-minute-mode" class="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+                        </label>
                     </div>
                     <!-- Export Options -->
                     <div>
-                        <h4 class="font-bold text-lg mb-2">Export Options</h4>
-                        <div class="flex-grow">
-                            <label for="base-filename" class="font-bold text-sm">Filename:</label>
-                            <input type="text" id="base-filename" class="p-2 border rounded-lg bg-gray-50 shadow-sm w-full text-sm">
-                            <p id="full-filename" class="text-xs text-gray-500 mt-1 truncate">Filename will appear here...</p>
-                        </div>
-                        <div class="flex flex-wrap gap-4 mt-4">
-                            <div class="flex items-center">
-                                <label for="output-format" class="font-bold mr-2 text-sm">Image Format:</label>
-                                <select id="output-format" class="p-2 border rounded-lg bg-gray-50 shadow-sm">
-                                    <option value="image/jpeg">JPEG</option>
-                                    <option value="image/png">PNG</option>
-                                </select>
+                        <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Export Settings
+                        </h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label for="base-filename" class="text-xs font-medium text-gray-500 dark:text-gray-400">Filename</label>
+                                <input type="text" id="base-filename" class="mt-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 shadow-sm w-full text-sm">
+                                <p id="full-filename" class="text-xs text-gray-400 dark:text-gray-500 mt-1 truncate">Preview will appear here...</p>
                             </div>
-                            <div class="flex items-center">
-                                <label for="pdf-images-per-page" class="font-bold mr-2 text-sm">PDF Images/Page:</label>
-                                <select id="pdf-images-per-page" class="p-2 border rounded-lg bg-gray-50 shadow-sm">
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
-                                    <option value="6">6</option>
-                                </select>
-                            </div>
-                            <div class="flex items-center">
-                                <label for="timezone-offset" class="font-bold mr-2 text-sm">Timezone:</label>
-                                <select id="timezone-offset" class="p-2 border rounded-lg bg-gray-50 shadow-sm">
-                                    <option value="0">UTC</option>
-                                    <option value="-12">UTC -12:00</option>
-                                    <option value="-11">UTC -11:00</option>
-                                    <option value="-10">UTC -10:00</option>
-                                    <option value="-9">UTC -09:00</option>
-                                    <option value="-8">UTC -08:00 (PST)</option>
-                                    <option value="-7">UTC -07:00 (MST)</option>
-                                    <option value="-6">UTC -06:00 (CST)</option>
-                                    <option value="-5">UTC -05:00 (EST)</option>
-                                    <option value="-4">UTC -04:00</option>
-                                    <option value="-3">UTC -03:00</option>
-                                    <option value="-2">UTC -02:00</option>
-                                    <option value="-1">UTC -01:00</option>
-                                    <option value="1">UTC +01:00</option>
-                                    <option value="2">UTC +02:00</option>
-                                    <option value="3">UTC +03:00</option>
-                                    <option value="4">UTC +04:00</option>
-                                    <option value="5">UTC +05:00</option>
-                                    <option value="6">UTC +06:00</option>
-                                    <option value="7">UTC +07:00</option>
-                                    <option value="8">UTC +08:00</option>
-                                    <option value="9">UTC +09:00</option>
-                                    <option value="10">UTC +10:00</option>
-                                    <option value="11">UTC +11:00</option>
-                                    <option value="12">UTC +12:00</option>
-                                </select>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label for="output-format" class="text-xs font-medium text-gray-500 dark:text-gray-400">Format</label>
+                                    <select id="output-format" class="mt-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 shadow-sm w-full text-sm">
+                                        <option value="image/jpeg">JPEG</option>
+                                        <option value="image/png">PNG</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="pdf-images-per-page" class="text-xs font-medium text-gray-500 dark:text-gray-400">PDF/Page</label>
+                                    <select id="pdf-images-per-page" class="mt-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 shadow-sm w-full text-sm">
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="6">6</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="timezone-offset" class="text-xs font-medium text-gray-500 dark:text-gray-400">Timezone</label>
+                                    <select id="timezone-offset" class="mt-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 shadow-sm w-full text-sm">
+                                        <option value="0">UTC</option>
+                                        <option value="-12">UTC-12</option>
+                                        <option value="-11">UTC-11</option>
+                                        <option value="-10">UTC-10</option>
+                                        <option value="-9">UTC-9</option>
+                                        <option value="-8">UTC-8 (PST)</option>
+                                        <option value="-7">UTC-7 (MST)</option>
+                                        <option value="-6">UTC-6 (CST)</option>
+                                        <option value="-5">UTC-5 (EST)</option>
+                                        <option value="-4">UTC-4</option>
+                                        <option value="-3">UTC-3</option>
+                                        <option value="-2">UTC-2</option>
+                                        <option value="-1">UTC-1</option>
+                                        <option value="1">UTC+1</option>
+                                        <option value="2">UTC+2</option>
+                                        <option value="3">UTC+3</option>
+                                        <option value="4">UTC+4</option>
+                                        <option value="5">UTC+5</option>
+                                        <option value="6">UTC+6</option>
+                                        <option value="7">UTC+7</option>
+                                        <option value="8">UTC+8</option>
+                                        <option value="9">UTC+9</option>
+                                        <option value="10">UTC+10</option>
+                                        <option value="11">UTC+11</option>
+                                        <option value="12">UTC+12</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <h2 class="text-2xl font-bold text-indigo-800">Generated Images</h2>
             <div class="flex items-center justify-between">
-                <span class="text-gray-600 font-medium">Drag & Drop to reorder</span>
-                <div class="flex gap-2">
-                    <button id="reverse-order-btn" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-1 px-3 rounded-full transition-colors shadow-lg">
-                        Reverse Order
+                <h2 class="text-xl font-bold text-indigo-800 dark:text-indigo-300 flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Generated Images
+                </h2>
+                <span id="image-count" class="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">0 images</span>
+            </div>
+            <div class="flex items-center justify-between flex-wrap gap-2">
+                <span class="text-sm text-gray-500 dark:text-gray-400">Drag & Drop to reorder</span>
+                <div class="flex gap-2 flex-wrap">
+                    <button id="reverse-order-btn" class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold py-1.5 px-3 rounded-lg transition-colors shadow flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                        Reverse
                     </button>
-                    <button id="clear-gallery-btn" class="bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-1 px-3 rounded-full transition-colors shadow-lg">
-                        Clear Gallery
+                    <button id="clear-gallery-btn" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1.5 px-3 rounded-lg transition-colors shadow flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Clear
                     </button>
-                    <button id="clear-all-btn" class="bg-gray-500 hover:bg-gray-600 text-white text-sm font-bold py-1 px-3 rounded-full transition-colors shadow-lg">
-                        Clear All
+                    <button id="clear-all-btn" class="bg-gray-500 hover:bg-gray-600 text-white text-xs font-bold py-1.5 px-3 rounded-lg transition-colors shadow flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        Reset All
                     </button>
                 </div>
             </div>
             
             <!-- Image Gallery -->
-            <div id="gallery" class="bg-gray-50 p-4 rounded-lg border border-gray-300 h-96 overflow-y-auto">
-                <p id="gallery-placeholder" class="text-center text-gray-400 italic">Extracted images will appear here.</p>
+            <div id="gallery" class="bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700 h-96 overflow-y-auto shadow-inner">
+                <div id="gallery-placeholder" class="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                    <svg class="w-16 h-16 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <p class="text-sm italic">Extracted images will appear here</p>
+                </div>
             </div>
 
             <!-- Export Controls -->
             <div id="export-controls" class="space-y-4" style="display: none;">
-                <h3 class="text-xl font-bold text-indigo-800">Export Options</h3>
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <button id="export-zip-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-full transition-colors shadow-lg">
-                        Export as ZIP
+                <h3 class="text-xl font-bold text-indigo-800 dark:text-indigo-300 flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Export Options
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button id="export-zip-btn" class="flex items-center justify-center bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                        <svg class="export-btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                        ZIP
                     </button>
-                    <button id="export-pdf-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-full transition-colors shadow-lg">
-                        Export as PDF
+                    <button id="export-pdf-btn" class="flex items-center justify-center bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                        <svg class="export-btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        PDF
                     </button>
-                    <button id="export-audio-btn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-full transition-colors shadow-lg">
-                        Export Audio
+                    <button id="export-audio-btn" class="flex items-center justify-center bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                        <svg class="export-btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                        Audio (WAV)
                     </button>
                 </div>
             </div>
 
-            <!-- Buy Me a Coffee -->
-            <div class="mt-8 text-center">
-                <a href="https://buymeacoffee.com/barryflooro" target="_blank" class="inline-block bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-6 rounded-full transition-colors shadow-lg transform hover:scale-105">
-                    Buy Me a Coffee
-                </a>
+            <!-- Support Section -->
+            <div class="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-center gap-3">
+                    <span class="text-sm text-gray-500 dark:text-gray-400">Enjoy this tool?</span>
+                    <a href="https://buymeacoffee.com/barryflooro" target="_blank" class="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-amber-400 hover:from-yellow-500 hover:to-amber-500 text-black font-bold py-2 px-4 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.216 6.415l-.132-.666c-.119-.598-.388-1.163-1.001-1.379-.197-.069-.42-.098-.57-.241-.152-.143-.196-.366-.231-.572-.065-.378-.125-.756-.192-1.133-.057-.325-.102-.69-.25-.987-.195-.4-.597-.634-.996-.788a5.723 5.723 0 00-.626-.194c-1-.263-2.05-.36-3.077-.416a25.834 25.834 0 00-3.7.062c-.915.083-1.88.184-2.75.5-.318.116-.646.256-.888.501-.297.302-.393.77-.177 1.146.154.267.415.456.692.58.36.162.737.284 1.123.366 1.075.238 2.189.331 3.287.37 1.218.05 2.437.01 3.65-.118.299-.033.598-.073.896-.119.352-.054.578-.513.474-.834-.124-.383-.457-.531-.834-.473-.466.074-.96.108-1.382.146-1.177.08-2.358.082-3.536.006a22.228 22.228 0 01-1.157-.107c-.086-.01-.18-.025-.258-.036-.243-.036-.484-.08-.724-.13-.111-.027-.111-.185 0-.212h.005c.277-.06.557-.108.838-.147h.002c.131-.009.263-.032.394-.048a25.076 25.076 0 013.426-.12c.674.019 1.347.067 2.017.144l.228.031c.267.04.533.088.798.145.392.085.895.113 1.07.542.055.137.08.288.111.431l.319 1.484a.237.237 0 01-.199.284h-.003c-.037.006-.075.01-.112.015a36.704 36.704 0 01-4.743.295 37.059 37.059 0 01-4.699-.304c-.14-.017-.293-.042-.417-.06-.326-.048-.649-.108-.973-.161-.393-.065-.768-.032-1.123.161-.29.16-.527.404-.675.701-.154.316-.199.66-.267 1-.069.34-.176.707-.135 1.056.087.753.613 1.365 1.37 1.502a39.69 39.69 0 0011.343.376.483.483 0 01.535.53l-.071.697-1.018 9.907c-.041.41-.047.832-.125 1.237-.122.637-.553 1.028-1.182 1.171-.577.131-1.165.2-1.756.205-.656.004-1.31-.025-1.966-.022-.699.004-1.556-.06-2.095-.58-.475-.458-.54-1.174-.605-1.793l-.731-7.013-.322-3.094c-.037-.351-.286-.695-.678-.678-.336.015-.718.3-.678.679l.228 2.185.949 9.112c.147 1.344 1.174 2.068 2.446 2.272.742.12 1.503.144 2.257.156.966.016 1.942.053 2.892-.122 1.408-.258 2.465-1.198 2.616-2.657.34-3.332.683-6.663 1.024-9.995l.215-2.087a.484.484 0 01.39-.426c.402-.078.787-.212 1.074-.518.455-.488.546-1.124.385-1.766zm-1.478.772c-.145.137-.363.201-.578.233-2.416.359-4.866.54-7.308.46-1.748-.06-3.477-.254-5.207-.498-.17-.024-.353-.055-.47-.18-.22-.236-.111-.71-.054-.995.052-.26.152-.609.463-.646.484-.057 1.046.148 1.526.22.577.088 1.156.159 1.737.212 2.48.226 5.002.19 7.472-.14.45-.06.899-.13 1.345-.21.399-.072.84-.206 1.08.206.166.281.188.657.162.974a.544.544 0 01-.168.364z"></path></svg>
+                        Buy Me a Coffee
+                    </a>
+                </div>
             </div>
 
         </div>
 
     </div>
 
-    <!-- Future Ad Space Bottom -->
-    <div class="w-full max-w-5xl py-4 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-xl shadow mt-6">
-        <p class="text-gray-500 dark:text-gray-400">Future Ad Space (728x90)</p>
-    </div>
+    <!-- Footer -->
+    <footer class="w-full max-w-5xl mt-8 py-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+        <p>Video Frame Extractor &mdash; Extract frames and audio from your videos</p>
+    </footer>
 
     <script>
         const videoUpload = document.getElementById('video-upload');
@@ -403,18 +493,27 @@
         const magnifyModalContainer = document.getElementById('magnify-modal-container');
         const magnifiedImage = document.getElementById('magnified-image');
         const audioProgressModal = document.getElementById('audio-progress-modal');
+        const audioProgressText = document.getElementById('audio-progress-text');
+        const audioProgressBar = document.getElementById('audio-progress-bar');
+        const cancelAudioBtn = document.getElementById('cancel-audio-btn');
+
+        let audioExtractionCancelled = false;
         
         // Settings Panel Elements
         const settingsToggle = document.getElementById('settings-toggle');
         const settingsPanel = document.getElementById('settings-panel');
         const settingsArrow = document.getElementById('settings-arrow');
         const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const headerDarkToggle = document.getElementById('header-dark-toggle');
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
         const tenMinuteModeToggle = document.getElementById('ten-minute-mode');
         const baseFilenameInput = document.getElementById('base-filename');
         const fullFilenameDisplay = document.getElementById('full-filename');
         const outputFormatSelect = document.getElementById('output-format');
         const pdfImagesPerPageSelect = document.getElementById('pdf-images-per-page');
         const timezoneOffsetSelect = document.getElementById('timezone-offset');
+        const imageCountDisplay = document.getElementById('image-count');
 
         let images = [];
         let videoFile = null;
@@ -541,14 +640,19 @@
 
         const renderGallery = () => {
             gallery.innerHTML = '';
+            imageCountDisplay.textContent = `${images.length} image${images.length !== 1 ? 's' : ''}`;
             if (images.length === 0) {
-                galleryPlaceholder.style.display = 'block';
+                gallery.innerHTML = `
+                    <div id="gallery-placeholder" class="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                        <svg class="w-16 h-16 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <p class="text-sm italic">Extracted images will appear here</p>
+                    </div>
+                `;
                 exportControls.style.display = 'none';
                 clearGalleryBtn.style.display = 'none';
                 reverseOrderBtn.style.display = 'none';
                 clearAllBtn.style.display = 'none';
             } else {
-                galleryPlaceholder.style.display = 'none';
                 exportControls.style.display = 'block';
                 clearGalleryBtn.style.display = 'block';
                 reverseOrderBtn.style.display = 'block';
@@ -744,19 +848,19 @@
         });
 
         serialBtn.addEventListener('click', () => {
-            serialBtn.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-            serialBtn.classList.add('bg-indigo-600', 'text-white', 'hover:bg-indigo-700');
-            manualBtn.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-700');
-            manualBtn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+            serialBtn.classList.remove('bg-transparent', 'text-gray-700', 'dark:text-gray-300', 'hover:bg-gray-300', 'dark:hover:bg-gray-600');
+            serialBtn.classList.add('bg-indigo-600', 'text-white', 'shadow');
+            manualBtn.classList.remove('bg-indigo-600', 'text-white', 'shadow');
+            manualBtn.classList.add('bg-transparent', 'text-gray-700', 'dark:text-gray-300', 'hover:bg-gray-300', 'dark:hover:bg-gray-600');
             manualOptions.classList.add('hidden');
             serialOptions.classList.remove('hidden');
         });
 
         manualBtn.addEventListener('click', () => {
-            manualBtn.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-            manualBtn.classList.add('bg-indigo-600', 'text-white', 'hover:bg-indigo-700');
-            serialBtn.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-700');
-            serialBtn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+            manualBtn.classList.remove('bg-transparent', 'text-gray-700', 'dark:text-gray-300', 'hover:bg-gray-300', 'dark:hover:bg-gray-600');
+            manualBtn.classList.add('bg-indigo-600', 'text-white', 'shadow');
+            serialBtn.classList.remove('bg-indigo-600', 'text-white', 'shadow');
+            serialBtn.classList.add('bg-transparent', 'text-gray-700', 'dark:text-gray-300', 'hover:bg-gray-300', 'dark:hover:bg-gray-600');
             manualOptions.classList.remove('hidden');
             serialOptions.classList.add('hidden');
         });
@@ -769,9 +873,29 @@
             settingsArrow.classList.toggle('rotate-180');
         });
         
+        const updateDarkModeIcons = () => {
+            const isDark = document.body.classList.contains('dark');
+            if (isDark) {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            } else {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+        };
+
+        const toggleDarkMode = () => {
+            document.body.classList.toggle('dark');
+            darkModeToggle.checked = document.body.classList.contains('dark');
+            updateDarkModeIcons();
+        };
+
         darkModeToggle.addEventListener('change', () => {
             document.body.classList.toggle('dark');
+            updateDarkModeIcons();
         });
+
+        headerDarkToggle.addEventListener('click', toggleDarkMode);
 
         tenMinuteModeToggle.addEventListener('change', () => {
             if (videoFile) {
@@ -982,47 +1106,163 @@
             }
         });
         
-        exportAudioBtn.addEventListener('click', () => {
+        // Helper function to encode audio buffer to WAV format
+        const encodeWAV = (audioBuffer) => {
+            const numChannels = audioBuffer.numberOfChannels;
+            const sampleRate = audioBuffer.sampleRate;
+            const format = 1; // PCM
+            const bitDepth = 16;
+
+            let length = audioBuffer.length * numChannels * (bitDepth / 8);
+            let buffer = new ArrayBuffer(44 + length);
+            let view = new DataView(buffer);
+
+            // Write WAV header
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + length, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, format, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true);
+            view.setUint16(32, numChannels * (bitDepth / 8), true);
+            view.setUint16(34, bitDepth, true);
+            writeString(36, 'data');
+            view.setUint32(40, length, true);
+
+            // Interleave channels and write audio data
+            let offset = 44;
+            const channels = [];
+            for (let i = 0; i < numChannels; i++) {
+                channels.push(audioBuffer.getChannelData(i));
+            }
+
+            for (let i = 0; i < audioBuffer.length; i++) {
+                for (let ch = 0; ch < numChannels; ch++) {
+                    let sample = Math.max(-1, Math.min(1, channels[ch][i]));
+                    sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                    view.setInt16(offset, sample, true);
+                    offset += 2;
+                }
+            }
+
+            return new Blob([buffer], { type: 'audio/wav' });
+        };
+
+        cancelAudioBtn.addEventListener('click', () => {
+            audioExtractionCancelled = true;
+        });
+
+        exportAudioBtn.addEventListener('click', async () => {
             if (!videoFile) {
                 openModal('No Video', 'Please upload a video file first.');
                 return;
             }
-            
-            const videoElement = videoPlayer;
-            const stream = videoElement.captureStream();
-            const audioTracks = stream.getAudioTracks();
-            
-            if (audioTracks.length === 0) {
-                openModal('No Audio', 'The video file does not contain an audio track.');
-                return;
-            }
 
+            audioExtractionCancelled = false;
             audioProgressModal.classList.remove('hidden');
+            audioProgressText.textContent = 'Reading video file...';
+            audioProgressBar.style.width = '10%';
 
-            const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-            const audioChunks = [];
-            
-            mediaRecorder.ondataavailable = event => {
-                audioChunks.push(event.data);
-            };
+            try {
+                // Read the video file as ArrayBuffer
+                const arrayBuffer = await videoFile.arrayBuffer();
 
-            mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                const audioUrl = URL.createObjectURL(audioBlob);
+                if (audioExtractionCancelled) {
+                    audioProgressModal.classList.add('hidden');
+                    return;
+                }
+
+                audioProgressText.textContent = 'Decoding audio...';
+                audioProgressBar.style.width = '30%';
+
+                // Create audio context and decode
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                let audioBuffer;
+                try {
+                    audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+                } catch (decodeError) {
+                    audioProgressModal.classList.add('hidden');
+                    openModal('No Audio', 'Could not extract audio from this video. The video may not contain an audio track or uses an unsupported format.');
+                    return;
+                }
+
+                if (audioExtractionCancelled) {
+                    audioProgressModal.classList.add('hidden');
+                    audioContext.close();
+                    return;
+                }
+
+                audioProgressText.textContent = 'Encoding to WAV format...';
+                audioProgressBar.style.width = '70%';
+
+                // Apply start/end time trimming
+                const startTime = parseFloat(startTimeInput.value) || 0;
+                const endTime = parseFloat(endTimeInput.value) || audioBuffer.duration;
+
+                const startSample = Math.floor(startTime * audioBuffer.sampleRate);
+                const endSample = Math.min(Math.floor(endTime * audioBuffer.sampleRate), audioBuffer.length);
+                const trimmedLength = endSample - startSample;
+
+                // Create trimmed buffer
+                const trimmedBuffer = audioContext.createBuffer(
+                    audioBuffer.numberOfChannels,
+                    trimmedLength,
+                    audioBuffer.sampleRate
+                );
+
+                for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+                    const sourceData = audioBuffer.getChannelData(channel);
+                    const destData = trimmedBuffer.getChannelData(channel);
+                    for (let i = 0; i < trimmedLength; i++) {
+                        destData[i] = sourceData[startSample + i];
+                    }
+                }
+
+                if (audioExtractionCancelled) {
+                    audioProgressModal.classList.add('hidden');
+                    audioContext.close();
+                    return;
+                }
+
+                audioProgressBar.style.width = '90%';
+
+                // Encode to WAV
+                const wavBlob = encodeWAV(trimmedBuffer);
+
+                audioProgressText.textContent = 'Preparing download...';
+                audioProgressBar.style.width = '100%';
+
+                // Download the file
+                const audioUrl = URL.createObjectURL(wavBlob);
                 const link = document.createElement('a');
                 link.href = audioUrl;
-                link.download = `${baseFilenameInput.value}_audio.webm`;
+                link.download = `${baseFilenameInput.value || 'audio'}_audio.wav`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                audioProgressModal.classList.add('hidden');
-                openModal('Audio Exported', 'The audio track has been successfully downloaded.');
-            };
+                URL.revokeObjectURL(audioUrl);
 
-            mediaRecorder.start();
-            setTimeout(() => {
-                mediaRecorder.stop();
-            }, videoPlayer.duration * 1000);
+                audioContext.close();
+                audioProgressModal.classList.add('hidden');
+
+                const duration = (trimmedBuffer.length / trimmedBuffer.sampleRate).toFixed(1);
+                openModal('Audio Exported', `Audio track (${duration}s) has been successfully exported as WAV.`);
+
+            } catch (error) {
+                audioProgressModal.classList.add('hidden');
+                console.error('Audio extraction error:', error);
+                openModal('Export Error', 'An error occurred while extracting audio. Please try again or use a different video file.');
+            }
         });
 
     </script>
