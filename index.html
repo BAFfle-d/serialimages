@@ -12,6 +12,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <!-- jsPDF CDN for creating PDF files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.js"></script>
+    <!-- Tesseract.js CDN for OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -127,6 +129,76 @@
         <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
             <h3 class="text-xl font-bold mb-4">Extracting Audio...</h3>
             <p class="text-gray-600 mb-4">This may take a few moments. Please do not close the browser.</p>
+        </div>
+    </div>
+
+    <!-- OCR Progress Modal -->
+    <div id="ocr-progress-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4">Running OCR...</h3>
+            <p id="ocr-progress-text" class="text-gray-600 mb-4">Processing image 1 of X...</p>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div id="ocr-progress-bar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OCR Results Modal -->
+    <div id="ocr-results-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-screen overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">OCR Results</h3>
+                <button onclick="closeOcrResultsModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="mb-4 flex gap-2">
+                <button id="copy-ocr-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full transition-colors shadow text-sm">
+                    Copy to Clipboard
+                </button>
+                <button id="download-ocr-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full transition-colors shadow text-sm">
+                    Download as TXT
+                </button>
+            </div>
+            <textarea id="ocr-results-text" class="flex-1 w-full p-4 border rounded-lg bg-gray-50 resize-none min-h-64 font-mono text-sm" readonly></textarea>
+        </div>
+    </div>
+
+    <!-- Transcription Progress Modal -->
+    <div id="transcription-progress-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Transcribing Audio...</h3>
+                <button onclick="stopTranscription()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <p id="transcription-progress-text" class="text-gray-600 mb-4">Listening to audio... Speak clearly for best results.</p>
+            <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                <span class="text-sm text-gray-500">Recording in progress</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transcription Results Modal -->
+    <div id="transcription-results-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-screen overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Transcription Results</h3>
+                <button onclick="closeTranscriptionResultsModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="mb-4 flex gap-2">
+                <button id="copy-transcription-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full transition-colors shadow text-sm">
+                    Copy to Clipboard
+                </button>
+                <button id="download-transcription-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full transition-colors shadow text-sm">
+                    Download as TXT
+                </button>
+            </div>
+            <textarea id="transcription-results-text" class="flex-1 w-full p-4 border rounded-lg bg-gray-50 resize-none min-h-64 font-mono text-sm" readonly></textarea>
         </div>
     </div>
 
@@ -340,6 +412,15 @@
                         Export Audio
                     </button>
                 </div>
+                <h3 class="text-xl font-bold text-indigo-800 mt-4">Optional Features</h3>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button id="run-ocr-btn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-full transition-colors shadow-lg">
+                        Run OCR on Images
+                    </button>
+                    <button id="transcribe-audio-btn" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-full transition-colors shadow-lg">
+                        Transcribe Audio
+                    </button>
+                </div>
             </div>
 
             <!-- Buy Me a Coffee -->
@@ -403,6 +484,29 @@
         const magnifyModalContainer = document.getElementById('magnify-modal-container');
         const magnifiedImage = document.getElementById('magnified-image');
         const audioProgressModal = document.getElementById('audio-progress-modal');
+
+        // OCR Elements
+        const ocrProgressModal = document.getElementById('ocr-progress-modal');
+        const ocrProgressText = document.getElementById('ocr-progress-text');
+        const ocrProgressBar = document.getElementById('ocr-progress-bar');
+        const ocrResultsModal = document.getElementById('ocr-results-modal');
+        const ocrResultsText = document.getElementById('ocr-results-text');
+        const copyOcrBtn = document.getElementById('copy-ocr-btn');
+        const downloadOcrBtn = document.getElementById('download-ocr-btn');
+        const runOcrBtn = document.getElementById('run-ocr-btn');
+
+        // Transcription Elements
+        const transcriptionProgressModal = document.getElementById('transcription-progress-modal');
+        const transcriptionProgressText = document.getElementById('transcription-progress-text');
+        const transcriptionResultsModal = document.getElementById('transcription-results-modal');
+        const transcriptionResultsText = document.getElementById('transcription-results-text');
+        const copyTranscriptionBtn = document.getElementById('copy-transcription-btn');
+        const downloadTranscriptionBtn = document.getElementById('download-transcription-btn');
+        const transcribeAudioBtn = document.getElementById('transcribe-audio-btn');
+
+        // Transcription state
+        let recognition = null;
+        let isTranscribing = false;
         
         // Settings Panel Elements
         const settingsToggle = document.getElementById('settings-toggle');
@@ -1023,6 +1127,299 @@
             setTimeout(() => {
                 mediaRecorder.stop();
             }, videoPlayer.duration * 1000);
+        });
+
+        // ==================== OCR FUNCTIONALITY ====================
+
+        const closeOcrResultsModal = () => {
+            ocrResultsModal.classList.add('hidden');
+        };
+
+        // Find overlapping lines between two text blocks
+        const findOverlap = (prevLines, currentLines) => {
+            if (prevLines.length === 0 || currentLines.length === 0) return 0;
+
+            // Look for overlap: last N lines of prev matching first N lines of current
+            const maxOverlap = Math.min(prevLines.length, currentLines.length, 10);
+
+            for (let overlapSize = maxOverlap; overlapSize >= 1; overlapSize--) {
+                const prevEnd = prevLines.slice(-overlapSize);
+                const currentStart = currentLines.slice(0, overlapSize);
+
+                // Compare the lines (with some tolerance for OCR errors)
+                let matches = 0;
+                for (let i = 0; i < overlapSize; i++) {
+                    const prevLine = prevEnd[i].toLowerCase().trim();
+                    const currLine = currentStart[i].toLowerCase().trim();
+
+                    // Consider it a match if lines are similar (Levenshtein or simple comparison)
+                    if (prevLine === currLine ||
+                        (prevLine.length > 5 && currLine.length > 5 &&
+                         (prevLine.includes(currLine) || currLine.includes(prevLine) ||
+                          calculateSimilarity(prevLine, currLine) > 0.8))) {
+                        matches++;
+                    }
+                }
+
+                // If most lines match, we found our overlap
+                if (matches >= overlapSize * 0.7) {
+                    return overlapSize;
+                }
+            }
+
+            return 0;
+        };
+
+        // Simple similarity calculation
+        const calculateSimilarity = (str1, str2) => {
+            if (str1.length === 0 || str2.length === 0) return 0;
+
+            const longer = str1.length > str2.length ? str1 : str2;
+            const shorter = str1.length > str2.length ? str2 : str1;
+
+            let matches = 0;
+            for (let i = 0; i < shorter.length; i++) {
+                if (longer.includes(shorter[i])) {
+                    matches++;
+                }
+            }
+
+            return matches / longer.length;
+        };
+
+        // Chain OCR results together, removing overlaps
+        const chainOcrResults = (ocrResults) => {
+            if (ocrResults.length === 0) return '';
+            if (ocrResults.length === 1) return ocrResults[0].text;
+
+            let chainedText = '';
+            let prevLines = [];
+
+            for (let i = 0; i < ocrResults.length; i++) {
+                const currentText = ocrResults[i].text.trim();
+                const currentLines = currentText.split('\n').filter(line => line.trim());
+
+                if (i === 0) {
+                    chainedText = currentText;
+                    prevLines = currentLines;
+                } else {
+                    // Find overlap with previous text
+                    const overlapLines = findOverlap(prevLines, currentLines);
+
+                    if (overlapLines > 0) {
+                        // Add only the non-overlapping portion
+                        const newLines = currentLines.slice(overlapLines);
+                        if (newLines.length > 0) {
+                            chainedText += '\n' + newLines.join('\n');
+                        }
+                    } else {
+                        // No overlap found, add a separator and all text
+                        chainedText += '\n\n--- Frame ' + (i + 1) + ' ---\n\n' + currentText;
+                    }
+
+                    prevLines = currentLines;
+                }
+            }
+
+            return chainedText;
+        };
+
+        runOcrBtn.addEventListener('click', async () => {
+            if (images.length === 0) {
+                openModal('No Images', 'Please extract some images first.');
+                return;
+            }
+
+            ocrProgressModal.classList.remove('hidden');
+            const ocrResults = [];
+
+            try {
+                const worker = await Tesseract.createWorker('eng', 1, {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            const overallProgress = ((ocrResults.length + m.progress) / images.length) * 100;
+                            ocrProgressBar.style.width = `${overallProgress}%`;
+                        }
+                    }
+                });
+
+                for (let i = 0; i < images.length; i++) {
+                    ocrProgressText.textContent = `Processing image ${i + 1} of ${images.length}...`;
+                    ocrProgressBar.style.width = `${(i / images.length) * 100}%`;
+
+                    const result = await worker.recognize(images[i].src);
+                    ocrResults.push({
+                        imageIndex: i,
+                        text: result.data.text,
+                        confidence: result.data.confidence
+                    });
+                }
+
+                await worker.terminate();
+
+                // Chain the results together, handling overlaps
+                const chainedText = chainOcrResults(ocrResults);
+
+                ocrProgressModal.classList.add('hidden');
+                ocrResultsText.value = chainedText;
+                ocrResultsModal.classList.remove('hidden');
+
+            } catch (error) {
+                ocrProgressModal.classList.add('hidden');
+                openModal('OCR Error', 'An error occurred during OCR processing: ' + error.message);
+            }
+        });
+
+        copyOcrBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(ocrResultsText.value);
+                openModal('Copied', 'OCR text has been copied to clipboard.');
+            } catch (err) {
+                openModal('Error', 'Failed to copy to clipboard.');
+            }
+        });
+
+        downloadOcrBtn.addEventListener('click', () => {
+            const blob = new Blob([ocrResultsText.value], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${baseFilenameInput.value || 'ocr_results'}_ocr.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+
+        // ==================== TRANSCRIPTION FUNCTIONALITY ====================
+
+        const closeTranscriptionResultsModal = () => {
+            transcriptionResultsModal.classList.add('hidden');
+        };
+
+        const stopTranscription = () => {
+            if (recognition) {
+                recognition.stop();
+                isTranscribing = false;
+            }
+            transcriptionProgressModal.classList.add('hidden');
+        };
+
+        transcribeAudioBtn.addEventListener('click', () => {
+            if (!videoFile) {
+                openModal('No Video', 'Please upload a video file first.');
+                return;
+            }
+
+            // Check for Web Speech API support
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if (!SpeechRecognition) {
+                openModal('Not Supported', 'Speech recognition is not supported in this browser. Please try Chrome or Edge.');
+                return;
+            }
+
+            // Check if video has audio
+            const stream = videoPlayer.captureStream();
+            const audioTracks = stream.getAudioTracks();
+
+            if (audioTracks.length === 0) {
+                openModal('No Audio', 'The video file does not contain an audio track.');
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            let finalTranscript = '';
+            let interimTranscript = '';
+
+            recognition.onstart = () => {
+                isTranscribing = true;
+                transcriptionProgressModal.classList.remove('hidden');
+
+                // Start video playback
+                videoPlayer.currentTime = parseFloat(startTimeInput.value);
+                videoPlayer.play();
+            };
+
+            recognition.onresult = (event) => {
+                interimTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                transcriptionProgressText.textContent = 'Transcribing: "' +
+                    (interimTranscript || finalTranscript.slice(-50)) + '..."';
+            };
+
+            recognition.onerror = (event) => {
+                if (event.error !== 'no-speech') {
+                    console.error('Speech recognition error:', event.error);
+                }
+            };
+
+            recognition.onend = () => {
+                videoPlayer.pause();
+                transcriptionProgressModal.classList.add('hidden');
+
+                if (finalTranscript.trim()) {
+                    transcriptionResultsText.value = finalTranscript.trim();
+                    transcriptionResultsModal.classList.remove('hidden');
+                } else {
+                    openModal('No Speech Detected', 'No speech was detected in the audio. Make sure the video has clear audio and try again.');
+                }
+
+                isTranscribing = false;
+                recognition = null;
+            };
+
+            // Set up video end handler
+            const endTime = parseFloat(endTimeInput.value);
+            const checkVideoEnd = () => {
+                if (videoPlayer.currentTime >= endTime && isTranscribing) {
+                    recognition.stop();
+                    videoPlayer.removeEventListener('timeupdate', checkVideoEnd);
+                }
+            };
+
+            videoPlayer.addEventListener('timeupdate', checkVideoEnd);
+
+            // Start recognition
+            try {
+                recognition.start();
+            } catch (err) {
+                openModal('Error', 'Failed to start speech recognition: ' + err.message);
+            }
+        });
+
+        copyTranscriptionBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(transcriptionResultsText.value);
+                openModal('Copied', 'Transcription has been copied to clipboard.');
+            } catch (err) {
+                openModal('Error', 'Failed to copy to clipboard.');
+            }
+        });
+
+        downloadTranscriptionBtn.addEventListener('click', () => {
+            const blob = new Blob([transcriptionResultsText.value], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${baseFilenameInput.value || 'transcription'}_transcript.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         });
 
     </script>
