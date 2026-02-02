@@ -1091,11 +1091,11 @@
                 openModal('No Video', 'Please upload a video file first.');
                 return;
             }
-            
+
             const videoElement = videoPlayer;
             const stream = videoElement.captureStream();
             const audioTracks = stream.getAudioTracks();
-            
+
             if (audioTracks.length === 0) {
                 openModal('No Audio', 'The video file does not contain an audio track.');
                 return;
@@ -1105,12 +1105,13 @@
 
             const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
             const audioChunks = [];
-            
+
             mediaRecorder.ondataavailable = event => {
                 audioChunks.push(event.data);
             };
 
             mediaRecorder.onstop = () => {
+                videoElement.pause();
                 const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                 const audioUrl = URL.createObjectURL(audioBlob);
                 const link = document.createElement('a');
@@ -1123,10 +1124,31 @@
                 openModal('Audio Exported', 'The audio track has been successfully downloaded.');
             };
 
+            // Start from beginning and play video to capture audio
+            const startTime = parseFloat(startTimeInput.value) || 0;
+            const endTime = parseFloat(endTimeInput.value) || videoPlayer.duration;
+
+            videoElement.currentTime = startTime;
             mediaRecorder.start();
-            setTimeout(() => {
+            videoElement.play();
+
+            // Stop when video ends or reaches end time
+            const onTimeUpdate = () => {
+                if (videoElement.currentTime >= endTime) {
+                    mediaRecorder.stop();
+                    videoElement.removeEventListener('timeupdate', onTimeUpdate);
+                    videoElement.removeEventListener('ended', onEnded);
+                }
+            };
+
+            const onEnded = () => {
                 mediaRecorder.stop();
-            }, videoPlayer.duration * 1000);
+                videoElement.removeEventListener('timeupdate', onTimeUpdate);
+                videoElement.removeEventListener('ended', onEnded);
+            };
+
+            videoElement.addEventListener('timeupdate', onTimeUpdate);
+            videoElement.addEventListener('ended', onEnded);
         });
 
         // ==================== OCR FUNCTIONALITY ====================
